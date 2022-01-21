@@ -1,0 +1,10 @@
+*.o
+**/.vs
+**/.vscode/
+**/*.out
+subdivide
+results/*.obj
+**/*.exe
+**/*.exp
+**/*.lib
+**/*.pdb
