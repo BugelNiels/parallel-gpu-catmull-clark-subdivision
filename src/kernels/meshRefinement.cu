@@ -61,22 +61,22 @@ __device__ void edgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int fd = in->numFaces;
     int v = in->verts[h];
     int j = vd + fd + in->edges[h];
-    float x, y, z;
     // boundary
-    if(in->twins[h] < 0) {
-        int i = in->verts[in->nexts[h]];
-        x = (in->xCoords[v] + in->xCoords[i]) / 2.0f;
-        y = (in->yCoords[v] + in->yCoords[i]) / 2.0f;
-        z = (in->zCoords[v] + in->zCoords[i]) / 2.0f;      
-    } else {
+    if(in->twins[h] >= 0) {
         int i = vd + in->faces[h];
-        x = (in->xCoords[v] + out->xCoords[i]) / 4.0f;
-        y = (in->yCoords[v] + out->yCoords[i]) / 4.0f;
-        z = (in->zCoords[v] + out->zCoords[i]) / 4.0f;
-    }    
-    atomicAdd(&out->xCoords[j], x);
-    atomicAdd(&out->yCoords[j], y);
-    atomicAdd(&out->zCoords[j], z);
+        float x = (in->xCoords[v] + out->xCoords[i]) / 4.0f;
+        float y = (in->yCoords[v] + out->yCoords[i]) / 4.0f;
+        float z = (in->zCoords[v] + out->zCoords[i]) / 4.0f;
+        atomicAdd(&out->xCoords[j], x);
+        atomicAdd(&out->yCoords[j], y);
+        atomicAdd(&out->zCoords[j], z);
+    } else  {
+        // boundary
+        int vNext = in->verts[next(h)];
+        out->xCoords[j] = (in->xCoords[v] + in->xCoords[vNext]) / 2.0f;
+        out->yCoords[j] = (in->yCoords[v] + in->yCoords[vNext]) / 2.0f;
+        out->zCoords[j] = (in->zCoords[v] + in->zCoords[vNext]) / 2.0f;   
+    }
 }
 
 __device__ void boundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) {
@@ -94,14 +94,14 @@ __device__ void boundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) {
     atomicAdd(&out->yCoords[v], y);
     atomicAdd(&out->zCoords[v], z);
 
-    int k = in->verts[in->nexts[h]];
+    int vNext = in->verts[in->nexts[h]];
     // do similar thing for the next vertex
-    x = (edgex + in->xCoords[k]) / 4.0f;
-    y = (edgey + in->yCoords[k]) / 4.0f;
-    z = (edgez + in->zCoords[k]) / 4.0f;
-    atomicAdd(&out->xCoords[k], x);
-    atomicAdd(&out->yCoords[k], y);
-    atomicAdd(&out->zCoords[k], z);
+    x = (edgex + in->xCoords[vNext]) / 4.0f;
+    y = (edgey + in->yCoords[vNext]) / 4.0f;
+    z = (edgez + in->zCoords[vNext]) / 4.0f;
+    atomicAdd(&out->xCoords[vNext], x);
+    atomicAdd(&out->yCoords[vNext], y);
+    atomicAdd(&out->zCoords[vNext], z);
 }
 
 __device__ void vertexPoint(int h, DeviceMesh* in, DeviceMesh* out, int n) {

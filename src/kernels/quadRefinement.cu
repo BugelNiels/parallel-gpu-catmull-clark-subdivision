@@ -50,10 +50,10 @@ __device__ void quadEdgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
         atomicAdd(&out->zCoords[j], z);
     } else  {
         // boundary
-        int i = in->verts[next(h)];
-        out->xCoords[j] = (in->xCoords[v] + in->xCoords[i]) / 2.0f;
-        out->yCoords[j] = (in->yCoords[v] + in->yCoords[i]) / 2.0f;
-        out->zCoords[j] = (in->zCoords[v] + in->zCoords[i]) / 2.0f;   
+        int vNext = in->verts[next(h)];
+        out->xCoords[j] = (in->xCoords[v] + in->xCoords[vNext]) / 2.0f;
+        out->yCoords[j] = (in->yCoords[v] + in->yCoords[vNext]) / 2.0f;
+        out->zCoords[j] = (in->zCoords[v] + in->zCoords[vNext]) / 2.0f;   
     }   
 }
 
@@ -73,14 +73,14 @@ __device__ void quadBoundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) 
     atomicAdd(&out->yCoords[v], y);
     atomicAdd(&out->zCoords[v], z);
 
-    int k = in->verts[next(h)];
+    int vNext = in->verts[next(h)];
     // do similar thing for the next vertex
-    x = (edgex + in->xCoords[k]) / 4.0f;
-    y = (edgey + in->yCoords[k]) / 4.0f;
-    z = (edgez + in->zCoords[k]) / 4.0f;
-    atomicAdd(&out->xCoords[k], x);
-    atomicAdd(&out->yCoords[k], y);
-    atomicAdd(&out->zCoords[k], z);
+    x = (edgex + in->xCoords[vNext]) / 4.0f;
+    y = (edgey + in->yCoords[vNext]) / 4.0f;
+    z = (edgez + in->zCoords[vNext]) / 4.0f;
+    atomicAdd(&out->xCoords[vNext], x);
+    atomicAdd(&out->yCoords[vNext], y);
+    atomicAdd(&out->zCoords[vNext], z);
 }
 
 __device__ void quadVertexPoint(int h, DeviceMesh* in, DeviceMesh* out, int n) {

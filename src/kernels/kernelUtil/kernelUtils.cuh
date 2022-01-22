@@ -4,12 +4,7 @@
 
 __device__ int cycleLength(int h, DeviceMesh* in);
 
-__device__ int backValence(int h, DeviceMesh* in);
-__device__ int boundaryValence(int h, DeviceMesh* in);
 __device__ int valence(int h, DeviceMesh* in);
-
-__device__ int backValenceQuad(int h, DeviceMesh* in);
-__device__ int boundaryValenceQuad(int h, DeviceMesh* in);
 __device__ int valenceQuad(int h, DeviceMesh* in);
 
 inline __device__ int next(int h) { return h % 4 == 3 ? h - 3 : h + 1; }

@@ -60,10 +60,10 @@ __global__ void optimisedSubdivide(DeviceMesh* in, DeviceMesh* out, int v0) {
         // edge points
         float x, y, z;
 
-        int k = in->verts[next(h)];
-        float edgex = (invX + in->xCoords[k]) / 2.0f;
-        float edgey = (invY + in->yCoords[k]) / 2.0f;
-        float edgez = (invZ + in->zCoords[k]) / 2.0f;
+        int vNext = in->verts[next(h)];
+        float edgex = (invX + in->xCoords[vNext]) / 2.0f;
+        float edgey = (invY + in->yCoords[vNext]) / 2.0f;
+        float edgez = (invZ + in->zCoords[vNext]) / 2.0f;
         
         // boundary edge point
         if(ht < 0) {
@@ -100,12 +100,12 @@ __global__ void optimisedSubdivide(DeviceMesh* in, DeviceMesh* out, int v0) {
             atomicAdd(&out->zCoords[v], z);
 
             // do similar thing for the next vertex
-            x = (edgex + in->xCoords[k]) / 4.0f;
-            y = (edgey + in->yCoords[k]) / 4.0f;
-            z = (edgez + in->zCoords[k]) / 4.0f;
-            atomicAdd(&out->xCoords[k], x);
-            atomicAdd(&out->yCoords[k], y);
-            atomicAdd(&out->zCoords[k], z);
+            x = (edgex + in->xCoords[vNext]) / 4.0f;
+            y = (edgey + in->yCoords[vNext]) / 4.0f;
+            z = (edgez + in->zCoords[vNext]) / 4.0f;
+            atomicAdd(&out->xCoords[vNext], x);
+            atomicAdd(&out->yCoords[vNext], y);
+            atomicAdd(&out->zCoords[vNext], z);
         }
         if(t2 == 0) {
             int ind = vd + face(h);
