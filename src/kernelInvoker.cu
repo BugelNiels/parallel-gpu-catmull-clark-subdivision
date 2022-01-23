@@ -88,6 +88,8 @@ DeviceMesh performSubdivision(DeviceMesh* input, DeviceMesh* output, int subdivi
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
     printf("\tSubdivision kernels completed\n\tExecution took: %lf msec\n\t------------------\n\n", milliseconds);
+    FILE* timingsFile = fopen("timings.txt", "a");
+    fprintf(timingsFile, "%lf\n", milliseconds);
     DeviceMesh m = devicePointerToHostMesh(in);
 
     cudaFree(in);
