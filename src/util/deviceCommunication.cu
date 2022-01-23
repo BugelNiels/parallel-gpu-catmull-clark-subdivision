@@ -92,5 +92,6 @@ Mesh copyDeviceMeshToHostMesh(DeviceMesh* from) {
     cudaErrCheck(cuda_ret, "Unable to copy verts from the device");
 	cuda_ret = cudaMemcpy(to.edges, from->edges, n * sizeof(int), cudaMemcpyDeviceToHost);
     cudaErrCheck(cuda_ret, "Unable to copy edges from the device");
+    printf("Final mesh: %d faces\n", n / 4);
     return to;
 }

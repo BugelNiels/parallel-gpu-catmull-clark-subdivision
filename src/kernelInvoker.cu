@@ -58,21 +58,25 @@ DeviceMesh performSubdivision(DeviceMesh* input, DeviceMesh* output, int subdivi
     startLevel = 1;
     v = mesh->numVerts + mesh->numFaces + mesh->numEdges;
   } 
+  if(USE_OPTIMIZED_KERNEL) {
+    // flip sign of boundary vertices
+    int he = pow(4, startLevel) * h0;
+    dim_grid.x = MIN((he - 1) / BLOCK_SIZE + 1, MAX_GRID_SIZE);
+    setBoundaryVerts<<<dim_grid, dim_block>>>(in);
+  }
 
   for (int d = startLevel; d < subdivisionLevel; d++) {
     // each thread covers 1 half edge. Number of half edges can be much greater than blockdim * gridDim. 
     int he = pow(4, d) * h0;
     dim_grid.x = MIN((he - 1) / BLOCK_SIZE + 1, MAX_GRID_SIZE);
-    if(USE_OPTIMIZED_KERNEL) {
-      
-      resetMesh<<<dim_grid, dim_block>>>(in, out);
+     resetMesh<<<dim_grid, dim_block>>>(in, out);
+    if(USE_OPTIMIZED_KERNEL) {      
       optimisedSubdivide<<<dim_grid, dim_block>>>(in, out, v);
     } else {
-      resetMesh<<<dim_grid, dim_block>>>(in, out);
       quadRefineTopology<<<dim_grid, dim_block>>>(in, out);
       quadFacePoints<<<dim_grid, dim_block>>>(in, out);
       quadEdgePoints<<<dim_grid, dim_block>>>(in, out);
-      quadVertexPoints<<<dim_grid, dim_block>>>(in, out, v);
+      quadVertexPoints<<<dim_grid, dim_block>>>(in, out);
     }
     // result is in "out"; after this swap, the result is in "in"
     meshSwap(&in, &out);

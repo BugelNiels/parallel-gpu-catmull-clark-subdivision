@@ -2,6 +2,19 @@
 #include "../util/util.cuh"
 #include "kernelUtil/kernelUtils.cuh"
 #include "stdio.h"
+#include "math.h"
+
+__global__ void setBoundaryVerts(DeviceMesh* in) {
+    int h = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+    
+    int hd = in->numHalfEdges;
+    for(int i = h; i < hd; i += stride) {
+        if(valenceQuad(i, in) < 0) {
+            in->verts[i] *= -1;
+        }
+    } 
+}
 
 __global__ void optimisedSubdivide(DeviceMesh* in, DeviceMesh* out, int v0) {
     
@@ -27,19 +40,21 @@ __global__ void optimisedSubdivide(DeviceMesh* in, DeviceMesh* out, int v0) {
             facePointsY[ti] = 0;
             facePointsZ[ti] = 0;
         }
-        // edge refinement
         int hp = prev(h);
         int he = in->edges[h];
-        int v = in->verts[h];
+        // sign of vBound can be used for efficient boundary testing
+        int vBound = in->verts[h];
+        int v = abs(vBound);
         int ht = in->twins[h];
 
+        // topology refinement
         out->twins[4 * h] = ht < 0 ? -1 : 4 * next(ht) + 3;
         out->twins[4 * h + 1] = 4 * next(h) + 2;
         out->twins[4 * h + 2] = 4 * hp + 1;
         out->twins[4 * h + 3] = 4 * in->twins[hp];
 
         out->verts[4 * h] = v;
-        out->verts[4 * h + 1] = vd + fd + he;
+        out->verts[4 * h + 1] = vBound >= 0 ? vd + fd + he : -vd - fd - he;
         out->verts[4 * h + 2] = vd + face(h);
         out->verts[4 * h + 3] = vd + fd + in->edges[hp];
 
@@ -60,29 +75,30 @@ __global__ void optimisedSubdivide(DeviceMesh* in, DeviceMesh* out, int v0) {
         // edge points
         float x, y, z;
 
-        int vNext = in->verts[next(h)];
+        int vNext = abs(in->verts[next(h)]);
         float edgex = (invX + in->xCoords[vNext]) / 2.0f;
         float edgey = (invY + in->yCoords[vNext]) / 2.0f;
         float edgez = (invZ + in->zCoords[vNext]) / 2.0f;
         
-        // boundary edge point
-        if(ht < 0) {
-            x = edgex;
-            y = edgey;
-            z = edgez;      
-        } else {
+        if(ht >= 0) {    
             // average the vertex of this vertex and the face point
             x = (invX + facePointsX[ti]) / 4.0f;
             y = (invY + facePointsY[ti]) / 4.0f;
-            z = (invZ + facePointsZ[ti]) / 4.0f;
+            z = (invZ + facePointsZ[ti]) / 4.0f; 
+        } else {
+            // boundary edge point
+            x = edgex;
+            y = edgey;
+            z = edgez; 
         }    
         int j = vd + fd + he;
         atomicAdd(&out->xCoords[j], x);
         atomicAdd(&out->yCoords[j], y);
         atomicAdd(&out->zCoords[j], z);
 
-        float n = valenceQuad(h, in);
-        if(n > 0) {
+        if(vBound >= 0) {
+            // newly added interior face and edge points always have valence 4
+            float n = v >= v0 ? 4 : valenceQuad(h, in);
             float n2 = n * n;
             x = (2 * edgex + facePointsX[ti] + (n - 3) * invX) / n2;
             y = (2 * edgey + facePointsY[ti] + (n - 3) * invY) / n2;
@@ -92,6 +108,7 @@ __global__ void optimisedSubdivide(DeviceMesh* in, DeviceMesh* out, int v0) {
             atomicAdd(&out->zCoords[v], z);
         } else if(ht < 0) {
             // boundary vertex point
+            // only needs an update from its boundary half-edge
             x = (edgex + invX) / 4.0f;
             y = (edgey + invY) / 4.0f;
             z = (edgez + invZ) / 4.0f;

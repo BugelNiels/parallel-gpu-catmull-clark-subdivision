@@ -129,7 +129,7 @@ __global__ void quadEdgePoints(DeviceMesh* in, DeviceMesh* out) {
     } 
 }
 
-__global__ void quadVertexPoints(DeviceMesh* in, DeviceMesh* out, int v0) {
+__global__ void quadVertexPoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
