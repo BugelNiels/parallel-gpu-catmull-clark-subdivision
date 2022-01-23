@@ -8,3 +8,4 @@ results/*.obj
 **/*.exp
 **/*.lib
 **/*.pdb
+timings.txt
