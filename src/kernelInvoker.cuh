@@ -5,4 +5,4 @@
 
 DeviceMesh performSubdivision(DeviceMesh* in, DeviceMesh* out, int subdivisionLevel, Mesh* mesh);
 
-#endif // KERNEL_INVOKER_CUH
+#endif  // KERNEL_INVOKER_CUH

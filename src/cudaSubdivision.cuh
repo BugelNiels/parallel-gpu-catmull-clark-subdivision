@@ -5,4 +5,4 @@
 
 Mesh cudaSubdivide(Mesh* mesh, int subdivisionLevel);
 
-#endif // CUDA_SUBDIVISION_CUH
+#endif  // CUDA_SUBDIVISION_CUH

@@ -13,6 +13,5 @@ __global__ void refineTopology(DeviceMesh* in, DeviceMesh* out);
 __global__ void facePoints(DeviceMesh* in, DeviceMesh* out);
 __global__ void edgePoints(DeviceMesh* in, DeviceMesh* out);
 __global__ void vertexPoints(DeviceMesh* in, DeviceMesh* out);
-__device__ int valence(int h, DeviceMesh* in);
 
-#endif // MESH_REFINEMENT_CUH
+#endif  // MESH_REFINEMENT_CUH

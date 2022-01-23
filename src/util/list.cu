@@ -1,5 +1,4 @@
 #include "list.cuh"
-
 #include "stdlib.h"
 #include "util.cuh"
 
@@ -12,7 +11,7 @@ List initEmptyList() {
 }
 
 void append(List* list, int item) {
-    if(list->i == list->size) {
+    if (list->i == list->size) {
         list->size *= 2;
         list->arr = (int*)realloc(list->arr, list->size * sizeof(int));
     }
@@ -20,10 +19,6 @@ void append(List* list, int item) {
     list->i++;
 }
 
-int indexOf(List* list, int item) {
-    return indexOfArr(list->arr, list->i, item);
-}
+int indexOf(List* list, int item) { return indexOfArr(list->arr, list->i, item); }
 
-int listSize(List* list) {
-    return list->i;
-}
+int listSize(List* list) { return list->i; }

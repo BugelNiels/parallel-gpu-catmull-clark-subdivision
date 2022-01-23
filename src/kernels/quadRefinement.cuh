@@ -9,4 +9,4 @@ __global__ void quadFacePoints(DeviceMesh* in, DeviceMesh* out);
 __global__ void quadEdgePoints(DeviceMesh* in, DeviceMesh* out);
 __global__ void quadVertexPoints(DeviceMesh* in, DeviceMesh* out);
 
-#endif // QUAD_REFINEMENT_CUH
+#endif  // QUAD_REFINEMENT_CUH

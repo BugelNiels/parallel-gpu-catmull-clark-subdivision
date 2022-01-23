@@ -1,36 +1,36 @@
-#include "objFile.cuh"
-
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+
+#include "objFile.cuh"
 
 #define INITIAL_LENGTH 128
 
 // https://stackoverflow.com/a/58244503
 // custom implementation, otherwise it won't work on windows :/
-char *stringSep(char **stringp, const char *delim) {
-    char *rv = *stringp;
+char* stringSep(char** stringp, const char* delim) {
+    char* rv = *stringp;
     if (rv) {
         *stringp += strcspn(*stringp, delim);
         if (**stringp) {
             *(*stringp)++ = '\0';
         } else {
-            *stringp = 0; 
+            *stringp = 0;
         }
     }
     return rv;
 }
 
 void printObjFile(ObjFile obj) {
-    for(int i = 0; i < obj.numVerts; i++) {
+    for (int i = 0; i < obj.numVerts; i++) {
         printf("v %lf %lf %lf\n", obj.xCoords[i], obj.yCoords[i], obj.zCoords[i]);
     }
 
     printf("\n");
-    for(int i = 0; i < obj.numFaces; i++) {
+    for (int i = 0; i < obj.numFaces; i++) {
         printf("f");
-        for(int j = 0; j < obj.faceValencies[i]; j++) {
+        for (int j = 0; j < obj.faceValencies[i]; j++) {
             printf(" %d", obj.faceIndices[i][j]);
         }
         printf("\n");
@@ -48,11 +48,11 @@ void addVertex(char* line, ObjFile* obj, int* vSize, int* v) {
     obj->zCoords[*v] = atof(stringSep(&lineToParse, " "));
     (*v)++;
 
-    if(*v >= *vSize - 4) {
+    if (*v >= *vSize - 4) {
         *vSize *= 2;
-        obj->xCoords =  (float*)realloc(obj->xCoords, *vSize * sizeof(float));
-        obj->yCoords =  (float*)realloc(obj->yCoords, *vSize * sizeof(float));
-        obj->zCoords =  (float*)realloc(obj->zCoords, *vSize * sizeof(float));
+        obj->xCoords = (float*)realloc(obj->xCoords, *vSize * sizeof(float));
+        obj->yCoords = (float*)realloc(obj->yCoords, *vSize * sizeof(float));
+        obj->zCoords = (float*)realloc(obj->zCoords, *vSize * sizeof(float));
     }
     free(start);
 }
@@ -66,10 +66,10 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
     int currentSize = 4;
     int* indices = (int*)malloc(currentSize * sizeof(int));
     int i = 0;
-    
-    char *token;
-    while((token = stringSep(&lineToParse, " "))) {   
-        if(i >= currentSize) {
+
+    char* token;
+    while ((token = stringSep(&lineToParse, " "))) {
+        if (i >= currentSize) {
             currentSize *= 2;
             indices = (int*)realloc(indices, currentSize * sizeof(int));
         }
@@ -77,12 +77,12 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
         i++;
     }
     obj->faceIndices[*f] = indices;
-    if(i != 4) {
+    if (i != 4) {
         obj->isQuad = 0;
     }
     obj->faceValencies[*f] = i;
     (*f)++;
-    if(*f == *fSize) {
+    if (*f == *fSize) {
         *fSize *= 2;
         obj->faceIndices = (int**)realloc(obj->faceIndices, *fSize * sizeof(int*));
         obj->faceValencies = (int*)realloc(obj->faceValencies, *fSize * sizeof(int));
@@ -91,24 +91,23 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
 }
 
 void parseLine(char* line, ObjFile* obj, int* vSize, int* v, int* fSize, int* f) {
-    if(strlen(line) <= 1) {
+    if (strlen(line) <= 1) {
         return;
     }
-    if(line[1] != ' ') {
+    if (line[1] != ' ') {
         return;
     }
     char start = line[0];
-    if(start == 'v') {
+    if (start == 'v') {
         addVertex(line, obj, vSize, v);
-    } else if(start == 'f') {  
+    } else if (start == 'f') {
         addFace(line, obj, fSize, f);
     }
 }
 
 ObjFile readObjFromFile(char const* objFileName) {
-    FILE *objFile = fopen(objFileName, "r");
-    if (objFile == NULL)
-    {
+    FILE* objFile = fopen(objFileName, "r");
+    if (objFile == NULL) {
         printf("Error opening .obj file!\n");
         exit(1);
     }
@@ -135,7 +134,7 @@ ObjFile readObjFromFile(char const* objFileName) {
     obj.numVerts = v;
     obj.numFaces = f;
     printf("%d %d \n", v, f);
-    if(obj.isQuad == 1) {
+    if (obj.isQuad == 1) {
         printf("Loaded quad mesh.\n");
     } else {
         printf("Loaded non-quad mesh.\n");
@@ -146,12 +145,11 @@ ObjFile readObjFromFile(char const* objFileName) {
 }
 
 void freeObjFile(ObjFile objFile) {
-
     free(objFile.xCoords);
     free(objFile.yCoords);
     free(objFile.zCoords);
 
-    for(int f = 0; f < objFile.numFaces; f++) {
+    for (int f = 0; f < objFile.numFaces; f++) {
         free(objFile.faceIndices[f]);
     }
     free(objFile.faceIndices);

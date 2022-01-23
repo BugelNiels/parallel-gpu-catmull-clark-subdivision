@@ -1,21 +1,20 @@
-#include "quadRefinement.cuh"
 #include "../util/util.cuh"
 #include "kernelUtil/kernelUtils.cuh"
+#include "quadRefinement.cuh"
 
 __global__ void resetMesh(DeviceMesh* in, DeviceMesh* out) {
-    
     int numVerts = in->numVerts + in->numFaces + in->numEdges;
-    
+
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
 
-    for(int v = i; v < numVerts; v += stride) {
+    for (int v = i; v < numVerts; v += stride) {
         out->xCoords[v] = 0;
         out->yCoords[v] = 0;
         out->zCoords[v] = 0;
-    } 
-    
-    if(blockIdx.x == 0 && threadIdx.x == 0) {
+    }
+
+    if (blockIdx.x == 0 && threadIdx.x == 0) {
         int h = in->numHalfEdges;
         out->numEdges = 2 * in->numEdges + h;
         out->numFaces = h;
@@ -30,7 +29,7 @@ __device__ void topologyRefinement(int h, DeviceMesh* in, DeviceMesh* out, int v
     int ht = in->twins[h];
     int thp = in->twins[hp];
     int ehp = in->edges[hp];
-    
+
     out->twins[4 * h] = ht < 0 ? -1 : 4 * in->nexts[ht] + 3;
     out->twins[4 * h + 1] = 4 * in->nexts[h] + 2;
     out->twins[4 * h + 2] = 4 * hp + 1;
@@ -62,7 +61,7 @@ __device__ void edgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int v = in->verts[h];
     int j = vd + fd + in->edges[h];
     // boundary
-    if(in->twins[h] >= 0) {
+    if (in->twins[h] >= 0) {
         int i = vd + in->faces[h];
         float x = (in->xCoords[v] + out->xCoords[i]) / 4.0f;
         float y = (in->yCoords[v] + out->yCoords[i]) / 4.0f;
@@ -70,12 +69,12 @@ __device__ void edgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
         atomicAdd(&out->xCoords[j], x);
         atomicAdd(&out->yCoords[j], y);
         atomicAdd(&out->zCoords[j], z);
-    } else  {
+    } else {
         // boundary
         int vNext = in->verts[next(h)];
         out->xCoords[j] = (in->xCoords[v] + in->xCoords[vNext]) / 2.0f;
         out->yCoords[j] = (in->yCoords[v] + in->yCoords[vNext]) / 2.0f;
-        out->zCoords[j] = (in->zCoords[v] + in->zCoords[vNext]) / 2.0f;   
+        out->zCoords[j] = (in->zCoords[v] + in->zCoords[vNext]) / 2.0f;
     }
 }
 
@@ -86,7 +85,7 @@ __device__ void boundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) {
     float edgex = out->xCoords[j];
     float edgey = out->yCoords[j];
     float edgez = out->zCoords[j];
-    
+
     float x = (edgex + in->xCoords[v]) / 4.0f;
     float y = (edgey + in->yCoords[v]) / 4.0f;
     float z = (edgez + in->zCoords[v]) / 4.0f;
@@ -122,44 +121,44 @@ __device__ void vertexPoint(int h, DeviceMesh* in, DeviceMesh* out, int n) {
 __global__ void refineTopology(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
-    
+
     int vd = in->numVerts;
     int fd = in->numFaces;
     int ed = in->numEdges;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         topologyRefinement(i, in, out, vd, fd, ed);
-    }    
+    }
 }
 
 __global__ void facePoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         facePoint(i, in, out);
-    } 
+    }
 }
 
 __global__ void edgePoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         edgePoint(i, in, out);
-    } 
+    }
 }
 
 __global__ void vertexPoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {        
+    for (int i = h; i < hd; i += stride) {
         float n = valence(i, in);
-        if(n > 0) {
+        if (n > 0) {
             vertexPoint(i, in, out, n);
-        } else if(in->twins[i] < 0) {
+        } else if (in->twins[i] < 0) {
             boundaryVertexPoint(i, in, out);
         }
-    }   
+    }
 }

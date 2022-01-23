@@ -1,6 +1,6 @@
-#include "quadRefinement.cuh"
 #include "../util/util.cuh"
 #include "kernelUtil/kernelUtils.cuh"
+#include "quadRefinement.cuh"
 
 __device__ void quadRefineEdges(int h, DeviceMesh* in, DeviceMesh* out, int vd, int fd, int ed) {
     int hp = prev(h);
@@ -9,7 +9,7 @@ __device__ void quadRefineEdges(int h, DeviceMesh* in, DeviceMesh* out, int vd, 
     int ht = in->twins[h];
     int thp = in->twins[hp];
     int ehp = in->edges[hp];
-    
+
     out->twins[4 * h] = ht < 0 ? -1 : 4 * next(ht) + 3;
     out->twins[4 * h + 1] = 4 * next(h) + 2;
     out->twins[4 * h + 2] = 4 * hp + 1;
@@ -40,7 +40,7 @@ __device__ void quadEdgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int v = in->verts[h];
     int j = vd + fd + in->edges[h];
 
-    if(in->twins[h] >= 0) {
+    if (in->twins[h] >= 0) {
         int i = vd + face(h);
         float x = (in->xCoords[v] + out->xCoords[i]) / 4.0f;
         float y = (in->yCoords[v] + out->yCoords[i]) / 4.0f;
@@ -48,15 +48,14 @@ __device__ void quadEdgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
         atomicAdd(&out->xCoords[j], x);
         atomicAdd(&out->yCoords[j], y);
         atomicAdd(&out->zCoords[j], z);
-    } else  {
+    } else {
         // boundary
         int vNext = in->verts[next(h)];
         out->xCoords[j] = (in->xCoords[v] + in->xCoords[vNext]) / 2.0f;
         out->yCoords[j] = (in->yCoords[v] + in->yCoords[vNext]) / 2.0f;
-        out->zCoords[j] = (in->zCoords[v] + in->zCoords[vNext]) / 2.0f;   
-    }   
+        out->zCoords[j] = (in->zCoords[v] + in->zCoords[vNext]) / 2.0f;
+    }
 }
-
 
 __device__ void quadBoundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int v = in->verts[h];
@@ -65,7 +64,7 @@ __device__ void quadBoundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) 
     float edgex = out->xCoords[j];
     float edgey = out->yCoords[j];
     float edgez = out->zCoords[j];
-    
+
     float x = (edgex + in->xCoords[v]) / 4.0f;
     float y = (edgey + in->yCoords[v]) / 4.0f;
     float z = (edgez + in->zCoords[v]) / 4.0f;
@@ -101,44 +100,44 @@ __device__ void quadVertexPoint(int h, DeviceMesh* in, DeviceMesh* out, int n) {
 __global__ void quadRefineTopology(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
-    
+
     int vd = in->numVerts;
     int fd = in->numFaces;
     int ed = in->numEdges;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         quadRefineEdges(i, in, out, vd, fd, ed);
-    }    
+    }
 }
 
 __global__ void quadFacePoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         quadFacePoint(i, in, out);
-    } 
+    }
 }
 
 __global__ void quadEdgePoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         quadEdgePoint(i, in, out);
-    } 
+    }
 }
 
 __global__ void quadVertexPoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     int hd = in->numHalfEdges;
-    for(int i = h; i < hd; i += stride) {
+    for (int i = h; i < hd; i += stride) {
         float n = valenceQuad(i, in);
-        if(n > 0) {
+        if (n > 0) {
             quadVertexPoint(i, in, out, n);
-        } else if(in->twins[i] < 0) {
+        } else if (in->twins[i] < 0) {
             quadBoundaryVertexPoint(i, in, out);
         }
-    }   
+    }
 }
