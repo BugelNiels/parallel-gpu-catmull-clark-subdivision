@@ -4,10 +4,21 @@
 #include "deviceCommunication.cuh"
 #include "util.cuh"
 
-// m = number of vertices in vD; n = number of half edges in vD
-void allocateDeviceMemory(DeviceMesh* deviceMesh, int m, int n, int n0, int isQuad) {
+void allocateDeviceMemory(DeviceMesh* deviceMesh, int m, int n, int n0) {
     cudaError_t cuda_ret;
-    printf("Allocating device variables\n");
+    // only allocate enough for the very first mesh
+    cuda_ret = cudaMalloc((void**)&deviceMesh->nexts, n0 * sizeof(int));
+    cudaErrCheck(cuda_ret, "Unable to allocate device memory for next array");
+    cuda_ret = cudaMalloc((void**)&deviceMesh->prevs, n0 * sizeof(int));
+    cudaErrCheck(cuda_ret, "Unable to allocate device memory for prev array");
+    cuda_ret = cudaMalloc((void**)&deviceMesh->faces, n0 * sizeof(int));
+    cudaErrCheck(cuda_ret, "Unable to allocate device memory for face array");
+    allocateDeviceMemoryQuad(deviceMesh, m, n);
+}
+
+// m = number of vertices in vD; n = number of half edges in vD
+void allocateDeviceMemoryQuad(DeviceMesh* deviceMesh, int m, int n) {
+    cudaError_t cuda_ret;
     cuda_ret = cudaMalloc((void**)&deviceMesh->xCoords, m * sizeof(float));
     cudaErrCheck(cuda_ret, "Unable to allocate device memory for X coordinates");
     cuda_ret = cudaMalloc((void**)&deviceMesh->yCoords, m * sizeof(float));
@@ -21,23 +32,10 @@ void allocateDeviceMemory(DeviceMesh* deviceMesh, int m, int n, int n0, int isQu
     cudaErrCheck(cuda_ret, "Unable to allocate device memory for vert array");
     cuda_ret = cudaMalloc((void**)&deviceMesh->edges, n * sizeof(int));
     cudaErrCheck(cuda_ret, "Unable to allocate device memory for edge array");
-
-    if (isQuad == 0) {
-        // only allocate enough for the very first mesh
-        cuda_ret = cudaMalloc((void**)&deviceMesh->nexts, n0 * sizeof(int));
-        cudaErrCheck(cuda_ret, "Unable to allocate device memory for next array");
-        cuda_ret = cudaMalloc((void**)&deviceMesh->prevs, n0 * sizeof(int));
-        cudaErrCheck(cuda_ret, "Unable to allocate device memory for prev array");
-        cuda_ret = cudaMalloc((void**)&deviceMesh->faces, n0 * sizeof(int));
-        cudaErrCheck(cuda_ret, "Unable to allocate device memory for face array");
-    }
-    printf("Device memory allocation completed\n\n");
 }
 
 void copyHostToDeviceMesh(Mesh* from, DeviceMesh* to) {
     cudaError_t cuda_ret;
-    printf("Copying mesh from host to device...\n");
-
     int m = from->numVerts;
     cuda_ret = cudaMemcpy(to->xCoords, from->xCoords, m * sizeof(float), cudaMemcpyHostToDevice);
     cudaErrCheck(cuda_ret, "Unable to copy x-coordinates to the device");
@@ -62,14 +60,12 @@ void copyHostToDeviceMesh(Mesh* from, DeviceMesh* to) {
         cuda_ret = cudaMemcpy(to->faces, from->faces, n * sizeof(int), cudaMemcpyHostToDevice);
         cudaErrCheck(cuda_ret, "Unable to copy faces to the device");
     }
-
-    printf("Copy to device completed\n\n");
 }
 
 Mesh copyDeviceMeshToHostMesh(DeviceMesh* from) {
     cudaError_t cuda_ret;
 
-    printf("Copying mesh from device back to host...\n");
+    printf("\tCopying mesh from device back to host...\n");
 
     Mesh to = initMesh(from->numVerts, from->numHalfEdges, from->numFaces, from->numEdges);
     to.isQuad = 1;
@@ -91,6 +87,6 @@ Mesh copyDeviceMeshToHostMesh(DeviceMesh* from) {
     cudaErrCheck(cuda_ret, "Unable to copy verts from the device");
     cuda_ret = cudaMemcpy(to.edges, from->edges, n * sizeof(int), cudaMemcpyDeviceToHost);
     cudaErrCheck(cuda_ret, "Unable to copy edges from the device");
-    printf("Final mesh: %d faces\n", n / 4);
+    printf("\tCopy completed: final mesh has %d faces\n", from->numFaces);
     return to;
 }

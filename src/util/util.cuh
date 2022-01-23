@@ -9,6 +9,7 @@
 void printFloatArr(float* arr, int size);
 void printIntArr(int* arr, int size);
 int indexOfArr(int* arr, int size, int item);
+void swap(int* a, int* b);
 
 #define FATAL(msg, ...)                                                          \
     do {                                                                         \

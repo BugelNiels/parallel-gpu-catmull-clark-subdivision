@@ -133,7 +133,6 @@ ObjFile readObjFromFile(char const* objFileName) {
     }
     obj.numVerts = v;
     obj.numFaces = f;
-    printf("%d %d \n", v, f);
     if (obj.isQuad == 1) {
         printf("Loaded quad mesh.\n");
     } else {

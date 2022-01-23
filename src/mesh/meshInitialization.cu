@@ -109,7 +109,7 @@ Mesh meshFromObjFile(ObjFile obj) {
         }
     }
     mesh.numEdges = listSize(&edgeList);
-    printf("Created Mesh with: %d half-edges, %d faces, %d vertices and %d edges\n", mesh.numHalfEdges, mesh.numFaces,
+    printf("Created Mesh with: %d half-edges, %d faces, %d vertices and %d edges\n\n", mesh.numHalfEdges, mesh.numFaces,
            mesh.numVerts, mesh.numEdges);
     return mesh;
 }

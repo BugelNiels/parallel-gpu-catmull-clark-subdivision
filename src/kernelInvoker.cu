@@ -36,7 +36,7 @@ DeviceMesh performSubdivision(DeviceMesh* input, DeviceMesh* output, int subdivi
     dim_block.y = dim_block.z = 1;
     dim_grid.y = dim_grid.z = 1;
 
-    printf("\n------------------\nPerforming subdivision\n...\n");
+    printf("\n\t------------------\n\tStarting subdivision kernels...\n");
 
     // device must be synced before this point
     cudaEventRecord(start);
@@ -87,7 +87,7 @@ DeviceMesh performSubdivision(DeviceMesh* input, DeviceMesh* output, int subdivi
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("Execution took: %lf msec\n------------------\n\n", milliseconds);
+    printf("\tSubdivision kernels completed\n\tExecution took: %lf msec\n\t------------------\n\n", milliseconds);
     DeviceMesh m = devicePointerToHostMesh(in);
 
     cudaFree(in);

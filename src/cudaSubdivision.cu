@@ -9,25 +9,48 @@
 #include "util/deviceCommunication.cuh"
 #include "util/util.cuh"
 
+int getNumberOfVertsAtLevel(int d, int v1, int e1, int f1) {
+	int finalNumberOfVerts = v1;
+    if (d > 1) {
+        finalNumberOfVerts += pow(2, d - 1) * (e1 + (pow(2, d) - 1) * f1);
+    }
+	return finalNumberOfVerts;
+}
+
 void allocateDeviceMemoryMeshes(DeviceMesh* in, DeviceMesh* out, Mesh* mesh, int subdivisionLevel) {
-    int finalNumberOfHalfEdges = pow(4, subdivisionLevel) * mesh->numHalfEdges;
     int v1 = mesh->numVerts + mesh->numFaces + mesh->numEdges;
     int e1 = 2 * mesh->numEdges + mesh->numHalfEdges;
     int f1 = mesh->numHalfEdges;
-    int finalNumberOfVerts = v1;
-    if (subdivisionLevel > 1) {
-        finalNumberOfVerts += pow(2, subdivisionLevel - 1) * (e1 + (pow(2, subdivisionLevel) - 1) * f1);
-    }
 
-    // Future TODO: in mesh does not need as much memory only D-1; which mesh get these, depends on the number of
-    // subdivision levels
-    allocateDeviceMemory(in, finalNumberOfVerts, finalNumberOfHalfEdges, mesh->numHalfEdges, mesh->isQuad);
-    allocateDeviceMemory(out, finalNumberOfVerts, finalNumberOfHalfEdges, 0, 0);
+	int bufferSizeAVerts;
+	int bufferSizeAHalfEdges;
+	int bufferSizeBVerts;
+	int bufferSizeBHalfEdges;
+	
+	bufferSizeAVerts = getNumberOfVertsAtLevel(subdivisionLevel - 1, v1, e1, f1);
+	bufferSizeAHalfEdges = pow(4, subdivisionLevel - 1) * mesh->numHalfEdges;
+	bufferSizeBVerts = getNumberOfVertsAtLevel(subdivisionLevel, v1, e1, f1);
+	bufferSizeBHalfEdges = bufferSizeAHalfEdges * 4;
+
+	if(subdivisionLevel % 2 == 0) {
+		// if odd, then buffer A is largest
+		swap(&bufferSizeAVerts, &bufferSizeBVerts);
+		swap(&bufferSizeAHalfEdges, &bufferSizeBHalfEdges);
+	}
+
+    printf("\tAllocating device variables...\n");
+    if (mesh->isQuad) {
+        allocateDeviceMemoryQuad(in, bufferSizeAVerts, bufferSizeAHalfEdges);
+    } else {
+        allocateDeviceMemory(in, bufferSizeAVerts, bufferSizeAHalfEdges, mesh->numHalfEdges);
+    }
+    allocateDeviceMemoryQuad(out, bufferSizeBVerts, bufferSizeBHalfEdges);
+    printf("\tDevice memory allocation completed\n");
 }
 
 Mesh cudaSubdivide(Mesh* mesh, int subdivisionLevel) {
     cudaError_t cuda_ret;
-    printf("Starting Subdvision\n");
+    printf("Starting Subdvision process...\n\n");
 
     // use double buffering; calculate final number of half edges and numVerts and allocat out and in arrays
     // switch each subdivision level
@@ -49,6 +72,6 @@ Mesh cudaSubdivide(Mesh* mesh, int subdivisionLevel) {
     freeDeviceMesh(&in);
     freeDeviceMesh(&out);
 
-    printf("Subdivision Complete!\n");
+    printf("\nSubdivision Process Complete!\n");
     return result_h;
 }

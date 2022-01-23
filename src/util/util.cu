@@ -31,3 +31,9 @@ int indexOfArr(int* arr, int size, int item) {
     }
     return -1;
 }
+
+void swap(int* a, int* b) {
+	int c = *a;
+	*a = *b;
+	*b = c;
+}
