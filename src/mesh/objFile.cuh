@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * @brief 
+ * 
+ */
 typedef struct ObjFile {
     // these have length numVerts
     float* xCoords;

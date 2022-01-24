@@ -3,6 +3,10 @@
 
 #include "mesh.cuh"
 
+/**
+ * @brief Mesh structure for usage on the GPU device
+ * 
+ */
 typedef struct DeviceMesh {
     // these have length numVerts
     float* xCoords;
@@ -17,7 +21,7 @@ typedef struct DeviceMesh {
     int* edges;
     int* faces;
 
-    // pointers to single int values
+    // general mesh properties
     int numHalfEdges;
     int numEdges;
     int numFaces;

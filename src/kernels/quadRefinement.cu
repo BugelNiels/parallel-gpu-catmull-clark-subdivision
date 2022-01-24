@@ -2,7 +2,18 @@
 #include "kernelUtil/kernelUtils.cuh"
 #include "quadRefinement.cuh"
 
-__device__ void quadRefineEdges(int h, DeviceMesh* in, DeviceMesh* out, int vd, int fd, int ed) {
+/**
+ * @brief Topology refinement of a single half-edge. Sets the properties of the 4 half-edges generated from the provided
+ * half-edge.
+ *
+ * @param h Half-edge index at level d
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ * @param vd Number of vertices at level d
+ * @param fd Number of faces at level d
+ * @param ed Number of edges at level d
+ */
+__device__ void quadRefineEdge(int h, DeviceMesh* in, DeviceMesh* out, int vd, int fd, int ed) {
     int hp = prev(h);
     int he = in->edges[h];
 
@@ -26,20 +37,54 @@ __device__ void quadRefineEdges(int h, DeviceMesh* in, DeviceMesh* out, int vd, 
     out->edges[4 * h + 3] = hp > thp ? 2 * ehp + 1 : 2 * ehp;
 }
 
+
+/**
+ * @brief Refines the topology for the half-edges.
+ *
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
+__global__ void quadRefineTopology(DeviceMesh* in, DeviceMesh* out) {
+    int h = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+
+    int vd = in->numVerts;
+    int fd = in->numFaces;
+    int ed = in->numEdges;
+    int hd = in->numHalfEdges;
+    for (int i = h; i < hd; i += stride) {
+        quadRefineEdge(i, in, out, vd, fd, ed);
+    }
+}
+
+/**
+ * @brief Calculates the contribution of the provided half-edge to its face point.
+ *
+ * @param h Half-edge index at level d
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
 __device__ void quadFacePoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int v = in->verts[h];
     int i = in->numVerts + face(h);
+    // valence is always 4 for quads
     atomicAdd(&out->xCoords[i], in->xCoords[v] / 4.0f);
     atomicAdd(&out->yCoords[i], in->yCoords[v] / 4.0f);
     atomicAdd(&out->zCoords[i], in->zCoords[v] / 4.0f);
 }
 
+/**
+ * @brief Calculates the contribution of the provided half-edge to its edge point
+ *
+ * @param h Half-edge index at level d
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
 __device__ void quadEdgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int vd = in->numVerts;
     int fd = in->numFaces;
     int v = in->verts[h];
     int j = vd + fd + in->edges[h];
-
     if (in->twins[h] >= 0) {
         int i = vd + face(h);
         float x = (in->xCoords[v] + out->xCoords[i]) / 4.0f;
@@ -57,6 +102,13 @@ __device__ void quadEdgePoint(int h, DeviceMesh* in, DeviceMesh* out) {
     }
 }
 
+/**
+ * @brief Calculates the contribution of this half-edge to its vertex point and the vertex point of NEXT(h)
+ *
+ * @param h Half-edge index at level d
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
 __device__ void quadBoundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) {
     int v = in->verts[h];
     int vd = in->numVerts;
@@ -82,6 +134,14 @@ __device__ void quadBoundaryVertexPoint(int h, DeviceMesh* in, DeviceMesh* out) 
     atomicAdd(&out->zCoords[vNext], z);
 }
 
+/**
+ * @brief Calculates the contribution of the provided half-edge to the vertex point
+ *
+ * @param h Half-edge index at level d
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ * @param n Valence of the vertex
+ */
 __device__ void quadVertexPoint(int h, DeviceMesh* in, DeviceMesh* out, int n) {
     int v = in->verts[h];
     int vd = in->numVerts;
@@ -97,19 +157,12 @@ __device__ void quadVertexPoint(int h, DeviceMesh* in, DeviceMesh* out, int n) {
     atomicAdd(&out->zCoords[v], z);
 }
 
-__global__ void quadRefineTopology(DeviceMesh* in, DeviceMesh* out) {
-    int h = blockIdx.x * blockDim.x + threadIdx.x;
-    int stride = blockDim.x * gridDim.x;
-
-    int vd = in->numVerts;
-    int fd = in->numFaces;
-    int ed = in->numEdges;
-    int hd = in->numHalfEdges;
-    for (int i = h; i < hd; i += stride) {
-        quadRefineEdges(i, in, out, vd, fd, ed);
-    }
-}
-
+/**
+ * @brief Calculates the positions of all face points
+ *
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
 __global__ void quadFacePoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
@@ -119,6 +172,12 @@ __global__ void quadFacePoints(DeviceMesh* in, DeviceMesh* out) {
     }
 }
 
+/**
+ * @brief Calculates the positions of all edge points
+ *
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
 __global__ void quadEdgePoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
@@ -128,6 +187,12 @@ __global__ void quadEdgePoints(DeviceMesh* in, DeviceMesh* out) {
     }
 }
 
+/**
+ * @brief Calculates the positions of all vertex points
+ *
+ * @param in Half-edge quad mesh at level d
+ * @param out Half-edge quad mesh at level d+1
+ */
 __global__ void quadVertexPoints(DeviceMesh* in, DeviceMesh* out) {
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;

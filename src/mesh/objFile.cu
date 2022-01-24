@@ -9,6 +9,13 @@
 
 // https://stackoverflow.com/a/58244503
 // custom implementation, otherwise it won't work on windows :/
+/**
+ * @brief 
+ * 
+ * @param stringp 
+ * @param delim 
+ * @return char* 
+ */
 char* stringSep(char** stringp, const char* delim) {
     char* rv = *stringp;
     if (rv) {
@@ -22,6 +29,11 @@ char* stringSep(char** stringp, const char* delim) {
     return rv;
 }
 
+/**
+ * @brief 
+ * 
+ * @param obj 
+ */
 void printObjFile(ObjFile obj) {
     for (int i = 0; i < obj.numVerts; i++) {
         printf("v %lf %lf %lf\n", obj.xCoords[i], obj.yCoords[i], obj.zCoords[i]);
@@ -37,6 +49,14 @@ void printObjFile(ObjFile obj) {
     }
 }
 
+/**
+ * @brief 
+ * 
+ * @param line 
+ * @param obj 
+ * @param vSize 
+ * @param v 
+ */
 void addVertex(char* line, ObjFile* obj, int* vSize, int* v) {
     char* lineToParse = (char*)malloc((strlen(line) + 1) * sizeof(char));
     char* start = lineToParse;
@@ -57,6 +77,14 @@ void addVertex(char* line, ObjFile* obj, int* vSize, int* v) {
     free(start);
 }
 
+/**
+ * @brief 
+ * 
+ * @param line 
+ * @param obj 
+ * @param fSize 
+ * @param f 
+ */
 void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
     char* lineToParse = (char*)malloc((strlen(line) + 1) * sizeof(char));
     char* start = lineToParse;
@@ -90,6 +118,16 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
     free(start);
 }
 
+/**
+ * @brief 
+ * 
+ * @param line 
+ * @param obj 
+ * @param vSize 
+ * @param v 
+ * @param fSize 
+ * @param f 
+ */
 void parseLine(char* line, ObjFile* obj, int* vSize, int* v, int* fSize, int* f) {
     if (strlen(line) <= 1) {
         return;
@@ -105,6 +143,12 @@ void parseLine(char* line, ObjFile* obj, int* vSize, int* v, int* fSize, int* f)
     }
 }
 
+/**
+ * @brief 
+ * 
+ * @param objFileName 
+ * @return ObjFile 
+ */
 ObjFile readObjFromFile(char const* objFileName) {
     FILE* objFile = fopen(objFileName, "r");
     if (objFile == NULL) {
@@ -143,6 +187,11 @@ ObjFile readObjFromFile(char const* objFileName) {
     return obj;
 }
 
+/**
+ * @brief 
+ * 
+ * @param objFile 
+ */
 void freeObjFile(ObjFile objFile) {
     free(objFile.xCoords);
     free(objFile.yCoords);

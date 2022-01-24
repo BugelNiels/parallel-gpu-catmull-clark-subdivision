@@ -11,6 +11,7 @@ void printIntArr(int* arr, int size);
 int indexOfArr(int* arr, int size, int item);
 void swap(int* a, int* b);
 
+
 #define FATAL(msg, ...)                                                          \
     do {                                                                         \
         fprintf(stderr, "[%s:%d] " msg "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
@@ -18,6 +19,7 @@ void swap(int* a, int* b);
     } while (0)
 
 // Inspired by https://stackoverflow.com/a/14038590
+
 #define cudaErrCheck(ans, message) \
     { cudaAssert((ans), (message), __FILE__, __LINE__); }
 inline void cudaAssert(cudaError_t code, const char* message, const char* file, int line) {

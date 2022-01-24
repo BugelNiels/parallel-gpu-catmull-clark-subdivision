@@ -9,13 +9,27 @@
 
 #define USE_OPTIMIZED_KERNEL 1
 
-// swaps pointers
+/**
+ * @brief 
+ * 
+ * @param prevMeshPtr 
+ * @param newMeshPtr 
+ */
 void meshSwap(DeviceMesh** prevMeshPtr, DeviceMesh** newMeshPtr) {
     DeviceMesh* temp = *prevMeshPtr;
     *prevMeshPtr = *newMeshPtr;
     *newMeshPtr = temp;
 }
 
+/**
+ * @brief 
+ * 
+ * @param input 
+ * @param output 
+ * @param subdivisionLevel 
+ * @param mesh 
+ * @return DeviceMesh 
+ */
 DeviceMesh performSubdivision(DeviceMesh* input, DeviceMesh* output, int subdivisionLevel, Mesh* mesh) {
     cudaError_t cuda_ret;
     cudaEvent_t start, stop;

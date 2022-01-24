@@ -9,6 +9,15 @@
 #include "util/deviceCommunication.cuh"
 #include "util/util.cuh"
 
+/**
+ * @brief Get the Number Of Verts At Level object
+ * 
+ * @param d 
+ * @param v1 
+ * @param e1 
+ * @param f1 
+ * @return int 
+ */
 int getNumberOfVertsAtLevel(int d, int v1, int e1, int f1) {
 	int finalNumberOfVerts = v1;
     if (d > 1) {
@@ -17,6 +26,14 @@ int getNumberOfVertsAtLevel(int d, int v1, int e1, int f1) {
 	return finalNumberOfVerts;
 }
 
+/**
+ * @brief 
+ * 
+ * @param in 
+ * @param out 
+ * @param mesh 
+ * @param subdivisionLevel 
+ */
 void allocateDeviceMemoryMeshes(DeviceMesh* in, DeviceMesh* out, Mesh* mesh, int subdivisionLevel) {
     int v1 = mesh->numVerts + mesh->numFaces + mesh->numEdges;
     int e1 = 2 * mesh->numEdges + mesh->numHalfEdges;
@@ -48,6 +65,13 @@ void allocateDeviceMemoryMeshes(DeviceMesh* in, DeviceMesh* out, Mesh* mesh, int
     printf("\tDevice memory allocation completed\n");
 }
 
+/**
+ * @brief 
+ * 
+ * @param mesh 
+ * @param subdivisionLevel 
+ * @return Mesh 
+ */
 Mesh cudaSubdivide(Mesh* mesh, int subdivisionLevel) {
     cudaError_t cuda_ret;
     printf("Starting Subdvision process...\n\n");

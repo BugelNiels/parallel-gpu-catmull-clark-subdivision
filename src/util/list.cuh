@@ -1,6 +1,10 @@
 #ifndef LIST_CUH
 #define LIST_CUH
 
+/**
+ * @brief 
+ * 
+ */
 typedef struct List {
     int* arr;
     int size;

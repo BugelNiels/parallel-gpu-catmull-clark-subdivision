@@ -6,6 +6,7 @@
 #define BLOCK_SIZE 128
 #define MAX_GRID_SIZE 262144
 #define WARP_SIZE 32
+/* Since BLOCK_SIZE must always be a multiple of WARP_SIZE, it is always divisible by 4 */
 #define FACES_PER_BLOCK (BLOCK_SIZE / 4)
 
 __global__ void resetMesh(DeviceMesh* in, DeviceMesh* out);

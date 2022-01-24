@@ -2,6 +2,11 @@
 #include "stdlib.h"
 #include "util.cuh"
 
+/**
+ * @brief 
+ * 
+ * @return List 
+ */
 List initEmptyList() {
     List list;
     list.size = 10;
@@ -10,6 +15,12 @@ List initEmptyList() {
     return list;
 }
 
+/**
+ * @brief 
+ * 
+ * @param list 
+ * @param item 
+ */
 void append(List* list, int item) {
     if (list->i == list->size) {
         list->size *= 2;
@@ -20,5 +31,4 @@ void append(List* list, int item) {
 }
 
 int indexOf(List* list, int item) { return indexOfArr(list->arr, list->i, item); }
-
 int listSize(List* list) { return list->i; }

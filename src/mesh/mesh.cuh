@@ -1,6 +1,10 @@
 #ifndef MESH_CUH
 #define MESH_CUH
 
+/**
+ * @brief Mesh structure for usage on the host device
+ * 
+ */
 typedef struct Mesh {
     // these have length numVerts
     float* xCoords;
@@ -19,7 +23,7 @@ typedef struct Mesh {
     int numEdges;
     int numFaces;
     int numVerts;
-
+    // 1 if the mesh is a quad; 0 otherwise
     int isQuad;
 } Mesh;
 

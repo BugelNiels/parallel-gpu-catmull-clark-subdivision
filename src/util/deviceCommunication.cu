@@ -4,6 +4,14 @@
 #include "deviceCommunication.cuh"
 #include "util.cuh"
 
+/**
+ * @brief 
+ * 
+ * @param deviceMesh 
+ * @param m 
+ * @param n 
+ * @param n0 
+ */
 void allocateDeviceMemory(DeviceMesh* deviceMesh, int m, int n, int n0) {
     cudaError_t cuda_ret;
     // only allocate enough for the very first mesh
@@ -17,6 +25,13 @@ void allocateDeviceMemory(DeviceMesh* deviceMesh, int m, int n, int n0) {
 }
 
 // m = number of vertices in vD; n = number of half edges in vD
+/**
+ * @brief 
+ * 
+ * @param deviceMesh 
+ * @param m 
+ * @param n 
+ */
 void allocateDeviceMemoryQuad(DeviceMesh* deviceMesh, int m, int n) {
     cudaError_t cuda_ret;
     cuda_ret = cudaMalloc((void**)&deviceMesh->xCoords, m * sizeof(float));
@@ -34,6 +49,12 @@ void allocateDeviceMemoryQuad(DeviceMesh* deviceMesh, int m, int n) {
     cudaErrCheck(cuda_ret, "Unable to allocate device memory for edge array");
 }
 
+/**
+ * @brief 
+ * 
+ * @param from 
+ * @param to 
+ */
 void copyHostToDeviceMesh(Mesh* from, DeviceMesh* to) {
     cudaError_t cuda_ret;
     int m = from->numVerts;
@@ -62,6 +83,12 @@ void copyHostToDeviceMesh(Mesh* from, DeviceMesh* to) {
     }
 }
 
+/**
+ * @brief 
+ * 
+ * @param from 
+ * @return Mesh 
+ */
 Mesh copyDeviceMeshToHostMesh(DeviceMesh* from) {
     cudaError_t cuda_ret;
 

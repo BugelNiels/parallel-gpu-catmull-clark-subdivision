@@ -2,11 +2,23 @@
 #include "../util/util.cuh"
 #include "meshInitialization.cuh"
 
-int pairingFunction(int a, int b) {
-    // cantor pairing function
-    return 0.5 * (a + b) * (a + b + 1) + b;
-}
+/**
+ * @brief Generates a unique integer from the provided two integers. Cantor pairing function.
+ *
+ * @param a First integer
+ * @param b First integer
+ * @return int Unique integer constructed from a and b
+ */
+int pairingFunction(int a, int b) { return 0.5 * (a + b) * (a + b + 1) + b; }
 
+/**
+ * @brief Creates a unique id for the undirected edge a-b. Regardless of the order of a and b, it will always generate
+ * the same unique number.
+ *
+ * @param a Index of vertex a
+ * @param b Index of vertex b
+ * @return int A unique id for this edge
+ */
 int createUndirectedEdgeId(int a, int b) {
     if (a > b) {
         return pairingFunction(b, a);
@@ -14,7 +26,15 @@ int createUndirectedEdgeId(int a, int b) {
     return pairingFunction(a, b);
 }
 
-void setEdgeAndTwins(Mesh* mesh, int h, int vertIdx2, List* edgeList, int n) {
+/**
+ * @brief Ses the edge and twins correctly for the provided half-edge.
+ *
+ * @param mesh The half-edge mesh
+ * @param h Index of the half-edge to set the edge and twins of
+ * @param vertIdx2 VERT(NEXT(h))
+ * @param edgeList List of all edges in the mesh so far
+ */
+void setEdgeAndTwins(Mesh* mesh, int h, int vertIdx2, List* edgeList) {
     int vertIdx1 = mesh->verts[h];
     int currentEdge = createUndirectedEdgeId(vertIdx1, vertIdx2);
 
@@ -28,14 +48,25 @@ void setEdgeAndTwins(Mesh* mesh, int h, int vertIdx2, List* edgeList, int n) {
         mesh->edges[h] = edgeIdx;
         // edge already existed, meaning there is a twin somewhere earlier in the
         // list of edges
-        int twin = indexOfArr(mesh->edges, n, edgeIdx);
+        int twin = indexOfArr(mesh->edges, mesh->numHalfEdges, edgeIdx);
         mesh->twins[h] = twin;
         mesh->twins[twin] = h;
     }
 }
 
-void addHalfEdge(Mesh* mesh, int h, int faceIdx, int* faceIndices, int i, int valency, List* edgeList, int isQuad,
-                 int n) {
+/**
+ * @brief Adds a half-edge and its properties to the mesh
+ *
+ * @param mesh The half-edge mesh
+ * @param h The half-edge index to add
+ * @param faceIdx The face index the half-edge it belongs to
+ * @param faceIndices Array of face indices
+ * @param i Which half-edge in the face this is about. Can be at most valency-1
+ * @param valency The valency of the face
+ * @param edgeList The list of all edges in the mesh so far
+ * @param isQuad 1 if the mesh is a quad, 0 otherwise
+ */
+void addHalfEdge(Mesh* mesh, int h, int faceIdx, int* faceIndices, int i, int valency, List* edgeList, int isQuad) {
     // vert
     int vertIdx = faceIndices[i];
     mesh->verts[h] = vertIdx;
@@ -43,7 +74,7 @@ void addHalfEdge(Mesh* mesh, int h, int faceIdx, int* faceIndices, int i, int va
     // twin
     mesh->twins[h] = -1;
     int nextVertIdx = faceIndices[(i + 1) % valency];
-    setEdgeAndTwins(mesh, h, nextVertIdx, edgeList, n);
+    setEdgeAndTwins(mesh, h, nextVertIdx, edgeList);
 
     if (isQuad == 0) {
         // prev and next
@@ -63,38 +94,54 @@ void addHalfEdge(Mesh* mesh, int h, int faceIdx, int* faceIndices, int i, int va
     }
 }
 
+/**
+ * @brief Allocates memory for the mesh and copies data from the obj file into it
+ *
+ * @param mesh The mesh in which to allocate memory
+ */
+void allocateMeshMemory(Mesh* mesh) {
+    mesh->xCoords = (float*)malloc(mesh->numVerts * sizeof(float));
+    mesh->yCoords = (float*)malloc(mesh->numVerts * sizeof(float));
+    mesh->zCoords = (float*)malloc(mesh->numVerts * sizeof(float));
+
+    mesh->twins = (int*)malloc(mesh->numHalfEdges * sizeof(int));
+    mesh->verts = (int*)malloc(mesh->numHalfEdges * sizeof(int));
+    mesh->edges = (int*)malloc(mesh->numHalfEdges * sizeof(int));
+
+    if (mesh->isQuad == 0) {
+        mesh->nexts = (int*)malloc(mesh->numHalfEdges * sizeof(int));
+        mesh->prevs = (int*)malloc(mesh->numHalfEdges * sizeof(int));
+        mesh->faces = (int*)malloc(mesh->numHalfEdges * sizeof(int));
+    } else {
+        mesh->nexts = NULL;
+        mesh->prevs = NULL;
+        mesh->faces = NULL;
+    }
+}
+
+/**
+ * @brief Creates a mesh from the provided objfile
+ *
+ * @param obj The objfile file to convert into a mesh struct
+ * @return Mesh The mesh
+ */
 Mesh meshFromObjFile(ObjFile obj) {
     Mesh mesh;
+    // Set initial properties
     mesh.numFaces = obj.numFaces;
     mesh.numVerts = obj.numVerts;
+    mesh.isQuad = obj.isQuad;
 
-    int numHalfEdges = 0;
+    mesh.numHalfEdges = 0;
     for (int faceIdx = 0; faceIdx < obj.numFaces; ++faceIdx) {
-        numHalfEdges += obj.faceValencies[faceIdx];
+        mesh.numHalfEdges += obj.faceValencies[faceIdx];
     }
-    mesh.numHalfEdges = numHalfEdges;
 
-    mesh.xCoords = (float*)malloc(mesh.numVerts * sizeof(float));
-    mesh.yCoords = (float*)malloc(mesh.numVerts * sizeof(float));
-    mesh.zCoords = (float*)malloc(mesh.numVerts * sizeof(float));
+    allocateMeshMemory(&mesh);
     memcpy(mesh.xCoords, obj.xCoords, mesh.numVerts * sizeof(float));
     memcpy(mesh.yCoords, obj.yCoords, mesh.numVerts * sizeof(float));
     memcpy(mesh.zCoords, obj.zCoords, mesh.numVerts * sizeof(float));
 
-    mesh.twins = (int*)malloc(numHalfEdges * sizeof(int));
-    mesh.verts = (int*)malloc(numHalfEdges * sizeof(int));
-    mesh.edges = (int*)malloc(numHalfEdges * sizeof(int));
-
-    mesh.isQuad = obj.isQuad;
-    if (obj.isQuad == 0) {
-        mesh.nexts = (int*)malloc(numHalfEdges * sizeof(int));
-        mesh.prevs = (int*)malloc(numHalfEdges * sizeof(int));
-        mesh.faces = (int*)malloc(numHalfEdges * sizeof(int));
-    } else {
-        mesh.nexts = NULL;
-        mesh.prevs = NULL;
-        mesh.faces = NULL;
-    }
     int h = 0;
     List edgeList = initEmptyList();
     // loop over every face
@@ -104,7 +151,7 @@ Mesh meshFromObjFile(ObjFile obj) {
         // faces
         int valency = obj.faceValencies[faceIdx];
         for (int i = 0; i < valency; ++i) {
-            addHalfEdge(&mesh, h, faceIdx, faceIndices, i, valency, &edgeList, obj.isQuad, numHalfEdges);
+            addHalfEdge(&mesh, h, faceIdx, faceIndices, i, valency, &edgeList, obj.isQuad);
             h++;
         }
     }

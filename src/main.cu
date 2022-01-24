@@ -8,6 +8,13 @@
 
 #define BUFFER_SIZE 80
 
+/**
+ * @brief Create a Obj File Path object
+ * 
+ * @param dir 
+ * @param name 
+ * @return char* 
+ */
 char* createObjFilePath(char const* dir, char const* name) {
     char* filePath = (char*)malloc(BUFFER_SIZE * sizeof(char));
     strcpy(filePath, dir);
@@ -16,6 +23,13 @@ char* createObjFilePath(char const* dir, char const* name) {
     return filePath;
 }
 
+/**
+ * @brief 
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         printf(
