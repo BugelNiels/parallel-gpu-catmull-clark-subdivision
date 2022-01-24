@@ -6,11 +6,18 @@ MAIN= subdivide
 CC= nvcc
 
 # define any compile-time flags
-CFLAGS= -O2 -rdc=true -g -G -allow-unsupported-compiler
-
+CFLAGS= -O3 -rdc=true
 
 # define any libraries to link into executable
 LIBS= 
+
+ifeq ($(OS),Windows_NT)
+    CFLAGS += -allow-unsupported-compiler
+	MAIN= subdivide.exe
+else
+    LIBS += -lm
+endif
+
 
 # define C source files
 SRCS= ${wildcard src/*.cu} ${wildcard src/**/*.cu} ${wildcard src/**/**/*.cu}
@@ -25,7 +32,7 @@ all: ${MAIN}
 ${MAIN}: ${SRCS} ${HDRS}
 	@echo #
 	@echo "-- BUILDING PROGRAM --"
-	${CC} ${SRCS} ${CFLAGS} ${LIBS} -o ${MAIN}.exe
+	${CC} ${SRCS} ${CFLAGS} ${LIBS} -o ${MAIN}
 
 clean:
 	@echo #

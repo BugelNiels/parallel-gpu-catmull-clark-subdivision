@@ -27,20 +27,11 @@ You need to the following to be able to compile and run the project
 
 ### Setup
 
-1. Compile the program by using one of the make files.
-    - **Linux**:
-
-        ```sh
-        make -f performance.mk
-        ```
-
-    - **Windows**:
-
-        ```sh
-        make -f performance_windows.mk
-        ```
-
-    There are also debug makefiles available that have a number of debugging compile flags enabled.
+The program is easily compiled using the `make` command:
+```sh
+    make
+```
+This should work on both Linux and Windows
 
 ### Running
 
