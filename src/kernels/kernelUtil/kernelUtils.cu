@@ -16,9 +16,6 @@ __device__ int valence(int h, DeviceMesh* in) {
     int n = 1;
     int hp = in->nexts[ht];
     while (hp != h) {
-        if (hp < 0) {
-            return -1;
-        }
         ht = in->twins[hp];
         if (ht < 0) {
             return -1;
@@ -44,9 +41,6 @@ __device__ int valenceQuad(int h, DeviceMesh* in) {
     int n = 1;
     int hp = next(ht);
     while (hp != h) {
-        if (hp < 0) {
-            return -1;
-        }
         ht = in->twins[hp];
         if (ht < 0) {
             return -1;
