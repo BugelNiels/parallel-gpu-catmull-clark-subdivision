@@ -27,8 +27,10 @@ You need to the following to be able to compile and run the project
 
 ### Setup
 
-The program is easily compiled using the `make` command:
+To set up the program, run the following commands:
 ```sh
+    git clone git@github.com:BugelNiels/cuda-subdivision.git
+    cd cuda-subdivision
     make
 ```
 This should work on both Linux and Windows
@@ -59,4 +61,4 @@ You can run the project as follows:
     ```
     Will subdivide the mesh `models/bigguy.obj` 4 times and write the result to `results/bigguy_result.obj`
 
-The `benchmark.sh` script can be used to benchmark. Not that this script is for linux terminals only (but can be adjusted to work for windows as well). The timings in milliseconds will be written to a file called `timings.txt`.
+The `benchmark.sh` script can be used to benchmark. Note that this script is for linux terminals only (but can be adjusted to work for windows as well). The timings in milliseconds will be written to a file called `timings.txt`.

@@ -10,11 +10,13 @@
 // https://stackoverflow.com/a/58244503
 // custom implementation, otherwise it won't work on windows :/
 /**
- * @brief 
- * 
- * @param stringp 
- * @param delim 
- * @return char* 
+ * @brief Seperates a string by the specified delimiter. Taken from https://stackoverflow.com/a/58244503
+ * Note that it modifies the provided string.
+ * This is necessary for the program to work on windows.
+ *
+ * @param stringp String to seperate
+ * @param delim Delimiter
+ * @return char* Pointer to the next position of the delimiter in the string
  */
 char* stringSep(char** stringp, const char* delim) {
     char* rv = *stringp;
@@ -30,45 +32,24 @@ char* stringSep(char** stringp, const char* delim) {
 }
 
 /**
- * @brief 
- * 
- * @param obj 
+ * @brief Adds a vertex to the objFile based on the provided line
+ *
+ * @param line The line in which the vertex data is located
+ * @param obj The ObjFile to add the new vertex to
+ * @param vSize The current size of the vertex coordinate array in the ObjFile
  */
-void printObjFile(ObjFile obj) {
-    for (int i = 0; i < obj.numVerts; i++) {
-        printf("v %lf %lf %lf\n", obj.xCoords[i], obj.yCoords[i], obj.zCoords[i]);
-    }
-
-    printf("\n");
-    for (int i = 0; i < obj.numFaces; i++) {
-        printf("f");
-        for (int j = 0; j < obj.faceValencies[i]; j++) {
-            printf(" %d", obj.faceIndices[i][j]);
-        }
-        printf("\n");
-    }
-}
-
-/**
- * @brief 
- * 
- * @param line 
- * @param obj 
- * @param vSize 
- * @param v 
- */
-void addVertex(char* line, ObjFile* obj, int* vSize, int* v) {
+void addVertex(char* line, ObjFile* obj, int* vSize) {
     char* lineToParse = (char*)malloc((strlen(line) + 1) * sizeof(char));
     char* start = lineToParse;
     strcpy(lineToParse, line);
     // remove the v
     stringSep(&lineToParse, " ");
-    obj->xCoords[*v] = atof(stringSep(&lineToParse, " "));
-    obj->yCoords[*v] = atof(stringSep(&lineToParse, " "));
-    obj->zCoords[*v] = atof(stringSep(&lineToParse, " "));
-    (*v)++;
+    obj->xCoords[obj->numVerts] = atof(stringSep(&lineToParse, " "));
+    obj->yCoords[obj->numVerts] = atof(stringSep(&lineToParse, " "));
+    obj->zCoords[obj->numVerts] = atof(stringSep(&lineToParse, " "));
+    obj->numVerts++;
 
-    if (*v >= *vSize - 4) {
+    if (obj->numVerts >= *vSize - 4) {
         *vSize *= 2;
         obj->xCoords = (float*)realloc(obj->xCoords, *vSize * sizeof(float));
         obj->yCoords = (float*)realloc(obj->yCoords, *vSize * sizeof(float));
@@ -78,14 +59,13 @@ void addVertex(char* line, ObjFile* obj, int* vSize, int* v) {
 }
 
 /**
- * @brief 
- * 
- * @param line 
- * @param obj 
- * @param fSize 
- * @param f 
+ * @brief Adds a face to the objFile based on the provided line
+ *
+ * @param line The line in which the face data is located
+ * @param obj The ObjFile to add the new face to
+ * @param fSize The current size of faceIndices and faceValencies arrays
  */
-void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
+void addFace(char* line, ObjFile* obj, int* fSize) {
     char* lineToParse = (char*)malloc((strlen(line) + 1) * sizeof(char));
     char* start = lineToParse;
     strcpy(lineToParse, line);
@@ -96,6 +76,7 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
     int i = 0;
 
     char* token;
+    // Add every vertex index to the indices array
     while ((token = stringSep(&lineToParse, " "))) {
         if (i >= currentSize) {
             currentSize *= 2;
@@ -104,13 +85,13 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
         indices[i] = atoi(token) - 1;
         i++;
     }
-    obj->faceIndices[*f] = indices;
+    obj->faceIndices[obj->numFaces] = indices;
     if (i != 4) {
         obj->isQuad = 0;
     }
-    obj->faceValencies[*f] = i;
-    (*f)++;
-    if (*f == *fSize) {
+    obj->faceValencies[obj->numFaces] = i;
+    obj->numFaces++;
+    if (obj->numFaces == *fSize) {
         *fSize *= 2;
         obj->faceIndices = (int**)realloc(obj->faceIndices, *fSize * sizeof(int*));
         obj->faceValencies = (int*)realloc(obj->faceValencies, *fSize * sizeof(int));
@@ -119,16 +100,14 @@ void addFace(char* line, ObjFile* obj, int* fSize, int* f) {
 }
 
 /**
- * @brief 
- * 
- * @param line 
- * @param obj 
- * @param vSize 
- * @param v 
- * @param fSize 
- * @param f 
+ * @brief Parses a line from aa .obj file
+ *
+ * @param line The line to parse
+ * @param obj The ObjFile to which to add the data
+ * @param vSize The current size of the vertex coordinate array in the ObjFile
+ * @param fSize The current size of faceIndices and faceValencies arrays
  */
-void parseLine(char* line, ObjFile* obj, int* vSize, int* v, int* fSize, int* f) {
+void parseLine(char* line, ObjFile* obj, int* vSize, int* fSize) {
     if (strlen(line) <= 1) {
         return;
     }
@@ -137,20 +116,20 @@ void parseLine(char* line, ObjFile* obj, int* vSize, int* v, int* fSize, int* f)
     }
     char start = line[0];
     if (start == 'v') {
-        addVertex(line, obj, vSize, v);
+        addVertex(line, obj, vSize);
     } else if (start == 'f') {
-        addFace(line, obj, fSize, f);
+        addFace(line, obj, fSize);
     }
 }
 
 /**
- * @brief 
- * 
- * @param objFileName 
- * @return ObjFile 
+ * @brief Parses a .obj file and puts the result in the ObjFile struct
+ *
+ * @param path The path to the .obj file
+ * @return ObjFile Struct containing data from the .obj file
  */
-ObjFile readObjFromFile(char const* objFileName) {
-    FILE* objFile = fopen(objFileName, "r");
+ObjFile parseObjFile(char const* path) {
+    FILE* objFile = fopen(path, "r");
     if (objFile == NULL) {
         printf("Error opening .obj file!\n");
         exit(1);
@@ -170,13 +149,11 @@ ObjFile readObjFromFile(char const* objFileName) {
     obj.faceIndices = (int**)malloc(fSize * sizeof(int*));
     obj.faceValencies = (int*)malloc(fSize * sizeof(int));
 
-    int v = 0;
-    int f = 0;
+    obj.numVerts = 0;
+    obj.numFaces = 0;
     while (fgets(line, len, objFile)) {
-        parseLine(line, &obj, &vSize, &v, &fSize, &f);
+        parseLine(line, &obj, &vSize, &fSize);
     }
-    obj.numVerts = v;
-    obj.numFaces = f;
     if (obj.isQuad == 1) {
         printf("Loaded quad mesh.\n");
     } else {
@@ -188,9 +165,9 @@ ObjFile readObjFromFile(char const* objFileName) {
 }
 
 /**
- * @brief 
- * 
- * @param objFile 
+ * @brief Frees data from an ObjFile
+ *
+ * @param objFile The ObjFile whose data to free
  */
 void freeObjFile(ObjFile objFile) {
     free(objFile.xCoords);

@@ -2,7 +2,7 @@
 #define LIST_CUH
 
 /**
- * @brief 
+ * @brief List data structure
  * 
  */
 typedef struct List {

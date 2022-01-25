@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 /**
- * @brief 
+ * @brief Struct that contains data from an ObjFile
  * 
  */
 typedef struct ObjFile {
@@ -14,17 +14,19 @@ typedef struct ObjFile {
     float* yCoords;
     float* zCoords;
 
-    // these all have length numHalfEdges
-    int** faceIndices;
+    // Both have length numFaces
     int* faceValencies;
+    // faceIndices[i] has length faceValencies[i]
+    int** faceIndices;
 
     int numFaces;
     int numVerts;
 
+    // 1 if the mesh is a quad; 0 otherwise
     int isQuad;
 } ObjFile;
 
-ObjFile readObjFromFile(char const* objFileName);
+ObjFile parseObjFile(char const* path);
 void freeObjFile(ObjFile objFile);
 
 #endif  // OBJ_FILE_CUH

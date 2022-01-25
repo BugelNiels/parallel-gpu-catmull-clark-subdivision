@@ -10,13 +10,13 @@
 #include "util/util.cuh"
 
 /**
- * @brief Get the Number Of Verts At Level object
+ * @brief Retrieves the number of vertices a mesh would have at subdivision level d
  * 
- * @param d 
- * @param v1 
- * @param e1 
- * @param f1 
- * @return int 
+ * @param d The subdivision level 
+ * @param v1 Number of vertices at subdivision level 1
+ * @param e1 Number of edges at subdivision level 1
+ * @param f1 Number of faces at subdivision level 1
+ * @return int Number of vertices at level d
  */
 int getNumberOfVertsAtLevel(int d, int v1, int e1, int f1) {
 	int finalNumberOfVerts = v1;
@@ -27,12 +27,12 @@ int getNumberOfVertsAtLevel(int d, int v1, int e1, int f1) {
 }
 
 /**
- * @brief 
+ * @brief Allocates memory for the device meshes
  * 
- * @param in 
- * @param out 
- * @param mesh 
- * @param subdivisionLevel 
+ * @param in First device mesh to allocate memory for
+ * @param out Second device mesh to allocate memory for
+ * @param mesh Host mesh to obtain information from
+ * @param subdivisionLevel Final subdivision level
  */
 void allocateDeviceMemoryMeshes(DeviceMesh* in, DeviceMesh* out, Mesh* mesh, int subdivisionLevel) {
     int v1 = mesh->numVerts + mesh->numFaces + mesh->numEdges;
@@ -66,11 +66,11 @@ void allocateDeviceMemoryMeshes(DeviceMesh* in, DeviceMesh* out, Mesh* mesh, int
 }
 
 /**
- * @brief 
+ * @brief Performs Catmull-Clark subdivision of the provided mesh up to subdivision level on the GPU 
  * 
- * @param mesh 
- * @param subdivisionLevel 
- * @return Mesh 
+ * @param mesh The mesh to subdivide
+ * @param subdivisionLevel The subdivision level to subdivice to
+ * @return Mesh The resulting subdivided mesh
  */
 Mesh cudaSubdivide(Mesh* mesh, int subdivisionLevel) {
     cudaError_t cuda_ret;

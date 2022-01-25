@@ -4,10 +4,10 @@
 #include "util.cuh"
 
 /**
- * @brief 
+ * @brief Prints an array of floats
  * 
- * @param arr 
- * @param size 
+ * @param arr The array to print
+ * @param size The size of the array
  */
 void printFloatArr(float* arr, int size) {
     if (size == 0) {
@@ -20,10 +20,10 @@ void printFloatArr(float* arr, int size) {
 }
 
 /**
- * @brief 
+ * @brief Prints an array of integers
  * 
- * @param arr 
- * @param size 
+ * @param arr The array to print
+ * @param size The size of the array
  */
 void printIntArr(int* arr, int size) {
     if (size == 0) {
@@ -36,12 +36,12 @@ void printIntArr(int* arr, int size) {
 }
 
 /**
- * @brief 
+ * @brief Finds the index of an item in an integer array. 
  * 
- * @param arr 
- * @param size 
- * @param item 
- * @return int 
+ * @param arr The array to search in
+ * @param size The size of the array
+ * @param item The item to search for
+ * @return int The index of the item in the array; -1 if it does not exist
  */
 int indexOfArr(int* arr, int size, int item) {
     for (int i = 0; i < size; i++) {
@@ -53,10 +53,10 @@ int indexOfArr(int* arr, int size, int item) {
 }
 
 /**
- * @brief 
+ * @brief Swaps to integers
  * 
- * @param a 
- * @param b 
+ * @param a Integer a
+ * @param b Integer b
  */
 void swap(int* a, int* b) {
 	int c = *a;

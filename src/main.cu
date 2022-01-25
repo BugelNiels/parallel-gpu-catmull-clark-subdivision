@@ -9,11 +9,11 @@
 #define BUFFER_SIZE 80
 
 /**
- * @brief Create a Obj File Path object
+ * @brief Creates a .obj file path with the provided directory and name
  * 
- * @param dir 
- * @param name 
- * @return char* 
+ * @param dir The directory to prepend to the path. Should include "/" at the end
+ * @param name The name of the .obj file
+ * @return char* A .obj file path
  */
 char* createObjFilePath(char const* dir, char const* name) {
     char* filePath = (char*)malloc(BUFFER_SIZE * sizeof(char));
@@ -24,22 +24,22 @@ char* createObjFilePath(char const* dir, char const* name) {
 }
 
 /**
- * @brief 
+ * @brief Entry point of the CUDA subdivision program. Usage: 
  * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @param argc Number of arguments
+ * @param argv Program arguments
+ * @return int Exit code
  */
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         printf(
-            "Please provide a subdivision level, source .obj file and optionally a destination .obj file. Do not "
-            "include \".obj\" in the filename\n");
+            " Please provide a subdivision level, source .obj file and optionally a destination .obj file.\n Do not "
+            "include \".obj\" in the filenames.\n\n Example:\n \t./subdivide 2 bigguy bigguy_result\n\n");
         return 0;
     }
     int subdivisionLevel = atoi(argv[1]);
     if (subdivisionLevel < 1) {
-        printf("Subdivision level must be at least 1");
+        printf(" You must apply at least 1 level of subdivision.\n");
         return 0;
     }
     char* filePath = createObjFilePath("models/", argv[2]);
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
         resultPath = createObjFilePath("results/", argv[3]);
     }
 
-    ObjFile objFile = readObjFromFile(filePath);
+    ObjFile objFile = parseObjFile(filePath);
     free(filePath);
     Mesh mesh = meshFromObjFile(objFile);
     freeObjFile(objFile);
