@@ -1,9 +1,9 @@
 <br />
 <p align="center">
-  <h1 align="center">CUDA Subdivision</h1>
+  <h1 align="center">Parallel CPU Catmull-Clark Subdivision</h1>
 
   <p align="center">
-    A fast GPU-based Catmull-Clark subdivision algorithm
+    A fast GPU-based Catmull-Clark subdivision algorithm using CUDA
   </p>
 </p>
 
